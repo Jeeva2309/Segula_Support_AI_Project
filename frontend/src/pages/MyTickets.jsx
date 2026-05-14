@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getTickets } from '../services/api';
+import { getTickets, updateTicket } from '../services/api';
+import toast from 'react-hot-toast';
 
 const STATUS_ICONS = { 'Open': '○', 'In Progress': '↻', 'Resolved': '✓' };
 const CAT_ICONS = { 'Hardware': '🖥️', 'Software': '💻', 'Network': '📶', 'Other': '📋' };
@@ -25,18 +26,42 @@ export default function MyTickets({ user }) {
   
   // Modal State
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  useEffect(() => {
+  const fetchTickets = () => {
     getTickets().then(res => {
       const formatted = res.data.map(t => ({
         ...t,
         id: t.ticket_id || t.id,
+        dbId: t.id,
         desc: t.description || t.desc,
         date: t.created_at || t.date
       }));
       setTickets(formatted);
-    }).catch(err => console.error("Error fetching tickets:", err));
+    }).catch(err => {
+      console.error("Error fetching tickets:", err);
+      toast.error("Failed to load tickets");
+    });
+  };
+
+  useEffect(() => {
+    fetchTickets();
   }, []);
+
+  const handleStatusChange = async (ticketId, dbId, newStatus) => {
+    setIsUpdating(true);
+    try {
+      await updateTicket(dbId, { status: newStatus });
+      toast.success(`Ticket ${ticketId} status updated to ${newStatus}`);
+      setSelectedTicket(prev => ({ ...prev, status: newStatus }));
+      fetchTickets();
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update ticket status');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const filtered = tickets.filter(t => {
     const tStatus = (t.status || '').trim();
@@ -174,7 +199,19 @@ export default function MyTickets({ user }) {
               <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{selectedTicket.desc}</p>
             </div>
 
-            <div className="flex justify-end pt-4 border-t border-gray-100">
+            <div className="flex justify-end pt-4 border-t border-gray-100 gap-3">
+              {user?.role === 'admin' && (
+                <select 
+                  className="form-input w-40 text-sm py-1.5"
+                  value={selectedTicket.status || 'Open'}
+                  onChange={(e) => handleStatusChange(selectedTicket.id, selectedTicket.dbId, e.target.value)}
+                  disabled={isUpdating}
+                >
+                  <option value="Open">Open</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Resolved">Resolved</option>
+                </select>
+              )}
               <button className="btn-outline" onClick={() => setSelectedTicket(null)}>Close</button>
             </div>
           </div>

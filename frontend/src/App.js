@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -19,24 +20,22 @@ function ScrollToTop() {
 }
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
 
-  useEffect(() => {
-    // Always start fresh - clear session on every page load
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-  }, []);
-
-  const ProtectedRoute = ({ children, requireAdmin }) => {
+  const ProtectedRoute = ({ children, requireAdmin, adminRestricted }) => {
     if (!user) return <Navigate to="/auth" replace />;
     if (requireAdmin && user.role !== 'admin') return <Navigate to="/" replace />;
+    if (adminRestricted && user.role === 'admin') return <Navigate to="/" replace />;
     return children;
   };
 
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <Toaster position="top-right" />
       <div className="min-h-screen flex flex-col">
         {user && <Navbar user={user} />}
         <main className="flex-1">
@@ -44,8 +43,8 @@ function App() {
             <Route path="/auth" element={!user ? <Auth onLogin={setUser} /> : <Navigate to="/" replace />} />
             
             <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-            <Route path="/raise-ticket" element={<ProtectedRoute><RaiseTicket user={user} /></ProtectedRoute>} />
-            <Route path="/chatbot" element={<ProtectedRoute><Chatbot /></ProtectedRoute>} />
+            <Route path="/raise-ticket" element={<ProtectedRoute adminRestricted={true}><RaiseTicket user={user} /></ProtectedRoute>} />
+            <Route path="/chatbot" element={<ProtectedRoute adminRestricted={true}><Chatbot /></ProtectedRoute>} />
             <Route path="/my-tickets" element={<ProtectedRoute><MyTickets user={user} /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile user={user} onLogout={() => setUser(null)} /></ProtectedRoute>} />
             

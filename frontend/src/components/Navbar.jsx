@@ -3,8 +3,8 @@ import { NavLink, useNavigate } from 'react-router-dom';
 
 const ALL_LINKS = [
   { to: '/', label: 'Home' },
-  { to: '/raise-ticket', label: 'Raise Ticket' },
-  { to: '/chatbot', label: 'Chatbot' },
+  { to: '/raise-ticket', label: 'Raise Ticket', userOnly: true },
+  { to: '/chatbot', label: 'Chatbot', userOnly: true },
   { to: '/my-tickets', label: 'My Tickets' },
   { to: '/admin', label: 'Admin Dashboard', adminOnly: true },
 ];
@@ -12,7 +12,16 @@ const ALL_LINKS = [
 export default function Navbar({ user }) {
   const navigate = useNavigate();
 
-  const navLinks = ALL_LINKS.filter(link => !link.adminOnly || user?.role === 'admin');
+  const navLinks = ALL_LINKS.filter(link => {
+    if (link.adminOnly && user?.role !== 'admin') return false;
+    if (link.userOnly && user?.role === 'admin') return false;
+    return true;
+  }).map(link => {
+    if (link.to === '/my-tickets' && user?.role === 'admin') {
+      return { ...link, label: 'Company Tickets' };
+    }
+    return link;
+  });
 
   return (
     <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 flex items-center px-8 h-16 gap-6">

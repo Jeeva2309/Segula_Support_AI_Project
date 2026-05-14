@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { classifyTicket, createTicket } from '../services/api';
+import toast from 'react-hot-toast';
 
 const TIPS = [
   { icon: '🎯', title: 'Be Specific', desc: 'Include error messages, when it started, and what you\'ve already tried.' },
@@ -23,7 +24,7 @@ export default function RaiseTicket() {
   const handleChange = e => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleClassify = async () => {
-    if (!form.description) return alert('Please describe your issue first!');
+    if (!form.description) return toast.error('Please describe your issue first!');
     setLoading(true);
     try {
       const res = await classifyTicket({ title: form.title, description: form.description });
@@ -35,15 +36,21 @@ export default function RaiseTicket() {
     setLoading(false);
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async e => {
     e.preventDefault();
-    if (!form.title || !form.description) return alert('Please fill in all required fields.');
+    if (!form.title || !form.description) return toast.error('Please fill in all required fields.');
+    setIsSubmitting(true);
     try {
       await createTicket({ ...form, ...classification });
+      toast.success('Ticket created successfully!');
       setSubmitted(true);
     } catch (err) {
-      alert('Failed to submit ticket. Please check if the backend and database are running.');
+      toast.error('Failed to submit ticket. Please check if the backend is running.');
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -121,8 +128,8 @@ export default function RaiseTicket() {
             >
               {loading ? '⏳ Classifying...' : '⊙ Auto-Classify with AI'}
             </button>
-            <button type="submit" className="btn-primary w-full justify-center py-3.5 text-base">
-              ➤ Submit Ticket
+            <button type="submit" disabled={isSubmitting} className="btn-primary w-full justify-center py-3.5 text-base disabled:opacity-50">
+              {isSubmitting ? '⏳ Submitting...' : '➤ Submit Ticket'}
             </button>
           </form>
         </div>

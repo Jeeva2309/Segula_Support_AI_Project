@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login, register } from '../services/api';
+import toast from 'react-hot-toast';
 
 export default function Auth({ onLogin }) {
   const navigate = useNavigate();
@@ -42,9 +43,11 @@ export default function Auth({ onLogin }) {
       localStorage.setItem('user', JSON.stringify(res.data.user));
       
       if (onLogin) onLogin(res.data.user);
+      toast.success(isLogin ? "Welcome back!" : "Account created successfully!");
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Authentication failed. Please try again.');
+      toast.error('Authentication failed');
     }
     setLoading(false);
   };

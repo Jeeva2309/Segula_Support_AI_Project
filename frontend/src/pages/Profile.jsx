@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../services/api';
+import toast from 'react-hot-toast';
 
 export default function Profile({ user, onLogout }) {
   const navigate = useNavigate();
@@ -8,6 +9,7 @@ export default function Profile({ user, onLogout }) {
   const handleLogout = () => {
     logout();
     if (onLogout) onLogout();
+    toast.success("Logged out successfully");
     navigate('/auth');
   };
 
