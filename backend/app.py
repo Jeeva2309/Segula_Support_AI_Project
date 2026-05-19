@@ -47,25 +47,18 @@ def create_app():
         import socket
         
         host = Config.MYSQL_HOST
-        port = int(Config.MYSQL_PORT)
+        open_ports = []
         
-        diagnostic_msg = ""
-        try:
-            # 1. Standard raw socket connection
-            s = socket.create_connection((host, port), timeout=5)
-            # Try to read some bytes
-            initial_bytes = b""
+        # Scan ports around 27416
+        for port in range(27410, 27430):
             try:
-                initial_bytes = s.recv(50)
-            except Exception as read_err:
-                diagnostic_msg += f"Read Error: {read_err}. "
-            s.close()
-            
-            diagnostic_msg += f"Raw Socket: Connected! Handshake Hex: {initial_bytes.hex()} (ASCII: {repr(initial_bytes)}). "
-        except Exception as conn_err:
-            diagnostic_msg += f"Raw Socket Connection Failed: {conn_err}. "
-            
-        return f"Diagnostics: {diagnostic_msg}"
+                s = socket.create_connection((host, port), timeout=1)
+                open_ports.append(port)
+                s.close()
+            except Exception:
+                pass
+                
+        return f"Open Ports on Aiven Host: {open_ports}"
 
     return app
 
