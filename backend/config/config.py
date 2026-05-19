@@ -22,8 +22,16 @@ class Config:
 
     SQLALCHEMY_DATABASE_URI = (
         f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD_ENCODED}"
-        f"@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}?ssl_ca={CA_PATH_ENCODED}"
+        f"@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
     )
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "connect_args": {
+            "ssl": {
+                "ca": CA_PATH,
+                "check_hostname": False
+            }
+        }
+    }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # ─── JWT ──────────────────────────────────────────────
