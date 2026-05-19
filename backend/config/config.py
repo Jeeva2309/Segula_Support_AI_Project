@@ -24,14 +24,16 @@ class Config:
         f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD_ENCODED}"
         f"@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
     )
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        "connect_args": {
-            "ssl": {
-                "ca": CA_PATH,
-                "check_hostname": False
+    SQLALCHEMY_ENGINE_OPTIONS = {}
+    if MYSQL_HOST and "aivencloud.com" in MYSQL_HOST:
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            "connect_args": {
+                "ssl": {
+                    "ca": CA_PATH,
+                    "check_hostname": False
+                }
             }
         }
-    }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # ─── JWT ──────────────────────────────────────────────
