@@ -1,13 +1,9 @@
 """
 ML Ticket Classifier
-Uses scikit-learn TF-IDF + RandomForest to classify tickets
-into category (Network/Hardware/Software/Other) and priority (High/Medium/Low)
+Uses a high-performance pure-Python TF-IDF + Cosine Similarity
+classifier to predict categories and priorities without binary dependencies.
 """
-import pickle, os
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.pipeline import Pipeline
+import os, math, re
 
 # ─── Training Data ───────────────────────────────────────
 TRAINING_DATA = {
@@ -129,8 +125,6 @@ TRAINING_DATA = {
     ]
 }
 
-MODEL_PATH = os.path.join(os.path.dirname(__file__), 'classifier.pkl')
-
 SOLUTIONS = {
     ('Network', 'High'):   'Immediate: Check physical connections, restart router/switch. Escalate to network team.',
     ('Network', 'Medium'): 'Try restarting your router and checking DNS settings. Run ipconfig /flushdns.',
@@ -148,49 +142,80 @@ SOLUTIONS = {
 
 class TicketClassifier:
     def __init__(self):
-        self.category_model = None
-        self.priority_model = None
-        self._load_or_train()
+        self.texts = TRAINING_DATA['texts']
+        self.categories = TRAINING_DATA['categories']
+        self.priorities = TRAINING_DATA['priorities']
+        self.train()
 
-    def _build_pipeline(self):
-        return Pipeline([
-            ('tfidf', TfidfVectorizer(max_features=500, ngram_range=(1, 2), stop_words='english')),
-            ('clf', RandomForestClassifier(n_estimators=100, random_state=42))
-        ])
-
-    def _load_or_train(self):
-        if os.path.exists(MODEL_PATH):
-            with open(MODEL_PATH, 'rb') as f:
-                data = pickle.load(f)
-                self.category_model = data['category']
-                self.priority_model = data['priority']
-        else:
-            self.train()
+    def _tokenize(self, text):
+        # Basic word extractor
+        return re.findall(r'\w+', text.lower())
 
     def train(self):
-        texts = TRAINING_DATA['texts']
-        self.category_model = self._build_pipeline()
-        self.category_model.fit(texts, TRAINING_DATA['categories'])
+        # Calculate DF and IDF
+        self.df = {}
+        self.num_docs = len(self.texts)
+        self.doc_tokens = [self._tokenize(t) for t in self.texts]
+        
+        for tokens in self.doc_tokens:
+            unique_tokens = set(tokens)
+            for token in unique_tokens:
+                self.df[token] = self.df.get(token, 0) + 1
+                
+        self.idf = {}
+        for token, df_val in self.df.items():
+            self.idf[token] = math.log((1 + self.num_docs) / (1 + df_val)) + 1
+            
+        self.tfidf_vectors = []
+        for tokens in self.doc_tokens:
+            vector = self._get_tfidf_vector(tokens)
+            self.tfidf_vectors.append(vector)
 
-        self.priority_model = self._build_pipeline()
-        self.priority_model.fit(texts, TRAINING_DATA['priorities'])
+    def _get_tfidf_vector(self, tokens):
+        tf = {}
+        for token in tokens:
+            tf[token] = tf.get(token, 0) + 1
+            
+        vector = {}
+        for token, tf_val in tf.items():
+            if token in self.idf:
+                vector[token] = tf_val * self.idf[token]
+        return vector
 
-        try:
-            with open(MODEL_PATH, 'wb') as f:
-                pickle.dump({'category': self.category_model, 'priority': self.priority_model}, f)
-        except Exception as e:
-            print(f"Warning: Could not save model to file (possibly read-only filesystem): {e}")
+    def _cosine_similarity(self, vec1, vec2):
+        dot_product = sum(vec1[w] * vec2.get(w, 0) for w in vec1)
+        mag1 = math.sqrt(sum(v**2 for v in vec1.values()))
+        mag2 = math.sqrt(sum(v**2 for v in vec2.values()))
+        if mag1 == 0 or mag2 == 0:
+            return 0.0
+        return dot_product / (mag1 * mag2)
 
     def predict(self, title: str, description: str) -> dict:
         text = f"{title} {description}"
-        category = self.category_model.predict([text])[0]
-        priority = self.priority_model.predict([text])[0]
+        tokens = self._tokenize(text)
+        input_vector = self._get_tfidf_vector(tokens)
+        
+        similarities = []
+        for i, doc_vector in enumerate(self.tfidf_vectors):
+            sim = self._cosine_similarity(input_vector, doc_vector)
+            similarities.append((sim, i))
+            
+        similarities.sort(reverse=True, key=lambda x: x[0])
+        best_sim, best_idx = similarities[0] if similarities else (0.0, 0)
+        
+        category = self.categories[best_idx]
+        priority = self.priorities[best_idx]
+        
+        if best_sim == 0:
+            category = "Other"
+            priority = "Low"
+            
         suggested_fix = SOLUTIONS.get((category, priority), 'IT team will review your ticket shortly.')
         return {
             'category': category,
             'priority': priority,
             'suggested_fix': suggested_fix,
-            'confidence': float(np.max(self.category_model.predict_proba([text])))
+            'confidence': min(max(best_sim, 0.1), 0.99)
         }
 
 # Singleton instance
