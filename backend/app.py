@@ -26,12 +26,29 @@ def create_app():
     app.register_blueprint(ml_bp,      url_prefix='/api/ml')
 
     # Create DB tables
-    with app.app_context():
-        db.create_all()
+    try:
+        with app.app_context():
+            db.create_all()
+        print("Database tables created or verified successfully.")
+    except Exception as e:
+        print(f"Warning: Could not connect to database to create tables: {e}")
+
+    @app.route('/')
+    def home():
+        return 'SupportAI Backend Running'
 
     @app.route('/api/health')
     def health():
         return {'status': 'ok', 'message': 'SupportAI Backend Running'}
+
+    @app.route('/testdb')
+    def testdb():
+        try:
+            with db.engine.connect() as conn:
+                conn.execute(db.text('SELECT 1'))
+            return 'Database Connected Successfully ✅'
+        except Exception as e:
+            return f'Database Connection Failed ❌: {str(e)}'
 
     return app
 
