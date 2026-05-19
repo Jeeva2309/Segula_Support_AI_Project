@@ -3,7 +3,7 @@ import axios from 'axios';
 // Base URL — change to your Render backend URL in production
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000/api'
-  : 'https://segula-support-ai-project-backend.vercel.app/api';
+  : (process.env.REACT_APP_API_URL || 'https://segula-support-ai-project-backend.vercel.app/api');
 
 const api = axios.create({
   baseURL: API_BASE,
