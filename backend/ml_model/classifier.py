@@ -175,8 +175,11 @@ class TicketClassifier:
         self.priority_model = self._build_pipeline()
         self.priority_model.fit(texts, TRAINING_DATA['priorities'])
 
-        with open(MODEL_PATH, 'wb') as f:
-            pickle.dump({'category': self.category_model, 'priority': self.priority_model}, f)
+        try:
+            with open(MODEL_PATH, 'wb') as f:
+                pickle.dump({'category': self.category_model, 'priority': self.priority_model}, f)
+        except Exception as e:
+            print(f"Warning: Could not save model to file (possibly read-only filesystem): {e}")
 
     def predict(self, title: str, description: str) -> dict:
         text = f"{title} {description}"
