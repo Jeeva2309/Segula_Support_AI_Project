@@ -19,14 +19,15 @@ class Config:
         f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD_ENCODED}"
         f"@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
     )
-    import ssl
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
+    # Dynamic absolute path to ca.pem
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    CA_PATH = os.path.join(BASE_DIR, 'ca.pem')
 
     SQLALCHEMY_ENGINE_OPTIONS = {
         "connect_args": {
-            "ssl": ctx
+            "ssl": {
+                "ca": CA_PATH
+            }
         }
     }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
