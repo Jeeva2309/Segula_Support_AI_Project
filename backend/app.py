@@ -14,7 +14,7 @@ def create_app():
     app.config.from_object(Config)
 
     # Extensions
-    CORS(app, origins=["http://localhost:3000", "http://localhost:3001", "https://your-vercel-app.vercel.app"])
+    CORS(app, resources={r"/*": {"origins": "*"}})
     JWTManager(app)
     db.init_app(app)
 
