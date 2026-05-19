@@ -19,9 +19,14 @@ class Config:
         f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD_ENCODED}"
         f"@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
     )
+    import ssl
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+
     SQLALCHEMY_ENGINE_OPTIONS = {
         "connect_args": {
-            "ssl": {"check_hostname": False}
+            "ssl": ctx
         }
     }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
