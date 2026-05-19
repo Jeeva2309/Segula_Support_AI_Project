@@ -46,12 +46,28 @@ def create_app():
         from config.config import Config
         import os
         exists = os.path.exists(Config.CA_PATH)
+        
+        # Check if using Aiven password or Segula@123
+        pw = Config.MYSQL_PASSWORD
+        is_segula_pw = (pw == "Segula@123")
+        is_aiven_pw = (pw.startswith("AVNS_") if pw else False)
+        pw_len = len(pw) if pw else 0
+        
+        details = (
+            f"Host: {Config.MYSQL_HOST}, "
+            f"Port: {Config.MYSQL_PORT}, "
+            f"User: {Config.MYSQL_USER}, "
+            f"DB: {Config.MYSQL_DB}, "
+            f"Password Length: {pw_len}, "
+            f"Is Aiven PW: {is_aiven_pw}, "
+            f"Is Segula PW: {is_segula_pw}"
+        )
         try:
             with db.engine.connect() as conn:
                 conn.execute(db.text('SELECT 1'))
-            return f'Database Connected Successfully ✅ (Cert exists: {exists})'
+            return f'Database Connected Successfully ✅ (Cert exists: {exists}). Connection: {details}'
         except Exception as e:
-            return f'Database Connection Failed ❌ (Cert exists: {exists}, path: {Config.CA_PATH}): {str(e)}'
+            return f'Database Connection Failed ❌ (Cert exists: {exists}, path: {Config.CA_PATH}). Config details: {details}. Error: {str(e)}'
 
     return app
 
