@@ -44,30 +44,28 @@ def create_app():
     @app.route('/testdb')
     def testdb():
         from config.config import Config
-        import os
-        exists = os.path.exists(Config.CA_PATH)
+        import socket
         
-        # Check if using Aiven password or Segula@123
-        pw = Config.MYSQL_PASSWORD
-        is_segula_pw = (pw == "Segula@123")
-        is_aiven_pw = (pw.startswith("AVNS_") if pw else False)
-        pw_len = len(pw) if pw else 0
+        host = Config.MYSQL_HOST
+        port = int(Config.MYSQL_PORT)
         
-        details = (
-            f"Host: {Config.MYSQL_HOST}, "
-            f"Port: {Config.MYSQL_PORT}, "
-            f"User: {Config.MYSQL_USER}, "
-            f"DB: {Config.MYSQL_DB}, "
-            f"Password Length: {pw_len}, "
-            f"Is Aiven PW: {is_aiven_pw}, "
-            f"Is Segula PW: {is_segula_pw}"
-        )
+        diagnostic_msg = ""
         try:
-            with db.engine.connect() as conn:
-                conn.execute(db.text('SELECT 1'))
-            return f'Database Connected Successfully ✅ (Cert exists: {exists}). Connection: {details}'
-        except Exception as e:
-            return f'Database Connection Failed ❌ (Cert exists: {exists}, path: {Config.CA_PATH}). Config details: {details}. Error: {str(e)}'
+            # 1. Standard raw socket connection
+            s = socket.create_connection((host, port), timeout=5)
+            # Try to read some bytes
+            initial_bytes = b""
+            try:
+                initial_bytes = s.recv(50)
+            except Exception as read_err:
+                diagnostic_msg += f"Read Error: {read_err}. "
+            s.close()
+            
+            diagnostic_msg += f"Raw Socket: Connected! Handshake Hex: {initial_bytes.hex()} (ASCII: {repr(initial_bytes)}). "
+        except Exception as conn_err:
+            diagnostic_msg += f"Raw Socket Connection Failed: {conn_err}. "
+            
+        return f"Diagnostics: {diagnostic_msg}"
 
     return app
 
