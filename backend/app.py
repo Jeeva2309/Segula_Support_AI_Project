@@ -43,12 +43,15 @@ def create_app():
 
     @app.route('/testdb')
     def testdb():
+        from config.config import Config
+        import os
+        exists = os.path.exists(Config.CA_PATH)
         try:
             with db.engine.connect() as conn:
                 conn.execute(db.text('SELECT 1'))
-            return 'Database Connected Successfully ✅'
+            return f'Database Connected Successfully ✅ (Cert exists: {exists})'
         except Exception as e:
-            return f'Database Connection Failed ❌: {str(e)}'
+            return f'Database Connection Failed ❌ (Cert exists: {exists}, path: {Config.CA_PATH}): {str(e)}'
 
     return app
 
