@@ -25,10 +25,7 @@ class Config:
 
     SQLALCHEMY_ENGINE_OPTIONS = {
         "connect_args": {
-            "ssl": {
-                "ca": CA_PATH,
-                "check_hostname": False
-            }
+            "ssl_ca": CA_PATH
         }
     }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
