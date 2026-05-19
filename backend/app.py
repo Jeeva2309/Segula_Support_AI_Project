@@ -43,22 +43,12 @@ def create_app():
 
     @app.route('/testdb')
     def testdb():
-        from config.config import Config
-        import socket
-        
-        host = Config.MYSQL_HOST
-        open_ports = []
-        
-        # Scan ports around 27416
-        for port in range(27410, 27430):
-            try:
-                s = socket.create_connection((host, port), timeout=1)
-                open_ports.append(port)
-                s.close()
-            except Exception:
-                pass
-                
-        return f"Open Ports on Aiven Host: {open_ports}"
+        try:
+            with db.engine.connect() as conn:
+                conn.execute(db.text('SELECT 1'))
+            return 'Database Connected Successfully ✅'
+        except Exception as e:
+            return f'Database Connection Failed ❌: {str(e)}'
 
     return app
 
