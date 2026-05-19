@@ -37,12 +37,12 @@ function App() {
       <ScrollToTop />
       <Toaster position="top-right" />
       <div className="min-h-screen flex flex-col">
-        {user && <Navbar user={user} />}
+        <Navbar user={user} />
         <main className="flex-1">
           <Routes>
             <Route path="/auth" element={!user ? <Auth onLogin={setUser} /> : <Navigate to="/" replace />} />
             
-            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/" element={<Home />} />
             <Route path="/raise-ticket" element={<ProtectedRoute adminRestricted={true}><RaiseTicket user={user} /></ProtectedRoute>} />
             <Route path="/chatbot" element={<ProtectedRoute adminRestricted={true}><Chatbot /></ProtectedRoute>} />
             <Route path="/my-tickets" element={<ProtectedRoute><MyTickets user={user} /></ProtectedRoute>} />
@@ -53,7 +53,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
-        {user && <Footer />}
+        <Footer />
       </div>
     </BrowserRouter>
   );

@@ -13,6 +13,7 @@ export default function Navbar({ user }) {
   const navigate = useNavigate();
 
   const navLinks = ALL_LINKS.filter(link => {
+    if (!user && link.to !== '/') return false;
     if (link.adminOnly && user?.role !== 'admin') return false;
     if (link.userOnly && user?.role === 'admin') return false;
     return true;
@@ -54,15 +55,24 @@ export default function Navbar({ user }) {
       </div>
 
       {/* User */}
-      <button 
-        onClick={() => navigate('/profile')}
-        className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:border-green hover:text-green transition-colors ml-3 bg-white cursor-pointer"
-        title="View Profile"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-        </svg>
-      </button>
+      {user ? (
+        <button 
+          onClick={() => navigate('/profile')}
+          className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:border-green hover:text-green transition-colors ml-3 bg-white cursor-pointer"
+          title="View Profile"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+          </svg>
+        </button>
+      ) : (
+        <button 
+          onClick={() => navigate('/auth')}
+          className="btn-primary py-2 px-5 text-sm font-semibold ml-3"
+        >
+          Sign In
+        </button>
+      )}
     </nav>
   );
 }
