@@ -20,10 +20,17 @@ class Config:
     MYSQL_PASSWORD_ENCODED = urllib.parse.quote_plus(MYSQL_PASSWORD)
     CA_PATH_ENCODED = urllib.parse.quote_plus(CA_PATH)
 
-    SQLALCHEMY_DATABASE_URI = (
-        f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD_ENCODED}"
-        f"@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
-    )
+    DATABASE_URL = os.getenv('DATABASE_URL')
+    if DATABASE_URL:
+        # standard compatibility fix for SQLAlchemy with Postgres URLs
+        if DATABASE_URL.startswith("postgres://"):
+            DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+        SQLALCHEMY_DATABASE_URI = DATABASE_URL
+    else:
+        SQLALCHEMY_DATABASE_URI = (
+            f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD_ENCODED}"
+            f"@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
+        )
     SQLALCHEMY_ENGINE_OPTIONS = {}
     if MYSQL_HOST and "aivencloud.com" in MYSQL_HOST:
         SQLALCHEMY_ENGINE_OPTIONS = {
