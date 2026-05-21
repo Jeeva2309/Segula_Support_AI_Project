@@ -88,6 +88,9 @@ def detect_intent(message: str) -> str:
             return intent
     return 'unknown'
 
+from services.llm import ask
+from services.kb import search
+
 @chatbot_bp.route('/message', methods=['POST'])
 def message():
     data = request.get_json()
@@ -99,16 +102,15 @@ def message():
     if intent in RESPONSES:
         reply = RESPONSES[intent]['reply']
     else:
-        reply = (
-            "I can help with these IT issues:\n\n"
-            "• WiFi / Network problems\n"
-            "• Slow system performance\n"
-            "• Password reset\n"
-            "• Email / Outlook issues\n"
-            "• Printer problems\n"
-            "• VPN access\n\n"
-            "Please describe your issue in more detail, or pick one of the quick options."
+        # Knowledge‑base search (top 3 hits)
+        kb_hits = search(msg)
+        kb_text = "\n".join(hit[0] for hit in kb_hits) if kb_hits else ""
+        system_prompt = (
+            "You are a helpful IT support assistant for a corporate environment. "
+            "Provide concise, step‑by‑step troubleshooting. Use any relevant knowledge‑base snippets."
         )
+        prompt = f"Question: {msg}\n\nRelevant KB snippets:\n{kb_text}" if kb_text else msg
+        reply = ask(prompt, system_prompt)
 
     # Log to DB
     log = ChatLog(message=msg, reply=reply, intent=intent)

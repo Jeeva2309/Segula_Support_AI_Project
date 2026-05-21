@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 
 const ALL_LINKS = [
@@ -11,6 +11,7 @@ const ALL_LINKS = [
 
 export default function Navbar({ user }) {
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const navLinks = ALL_LINKS.filter(link => {
     if (!user && link.to !== '/') return false;
@@ -25,27 +26,38 @@ export default function Navbar({ user }) {
   });
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 flex items-center px-8 h-16 gap-6">
+    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 flex flex-col md:flex-row items-center px-8 h-16 md:h-auto gap-4 md:gap-6">
       {/* Logo */}
       <NavLink to="/" className="flex items-center gap-2.5 no-underline">
         <img src="/logo.png" alt="SEGULA Technologies Logo" className="h-8 object-contain" />
+        <span className="font-head font-semibold text-base text-gray-900 border-l border-gray-300 pl-4 ml-2">SupportAI</span>
       </NavLink>
-      <span className="font-head font-semibold text-base text-gray-900 border-l border-gray-300 pl-4 ml-2">SupportAI</span>
 
-      {/* Nav Links */}
-      <div className="flex gap-1 ml-auto items-center">
-        {navLinks.map(({ to, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/'}
-            className={({ isActive }) =>
-              `nav-link ${isActive ? 'active' : ''}`
-            }
-          >
-            {label}
-          </NavLink>
-        ))}
+      {/* Mobile menu button */}
+      <button
+        className="md:hidden ml-auto text-gray-600 hover:text-green transition-colors"
+        onClick={() => setMobileOpen(!mobileOpen)}
+        aria-label="Toggle navigation"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={mobileOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+        </svg>
+      </button>
+
+      {/* Nav Links – hidden on mobile unless open */}
+      <div className={`flex-1 md:flex md:items-center md:justify-center ${mobileOpen ? "block" : "hidden"}`}>
+        <div className="flex flex-col md:flex-row gap-2 md:gap-4 ml-auto items-center">
+          {navLinks.map(({ to, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/'}
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+            >
+              {label}
+            </NavLink>
+          ))}
+        </div>
       </div>
 
       {/* Status */}
@@ -56,17 +68,18 @@ export default function Navbar({ user }) {
 
       {/* User */}
       {user ? (
-        <button 
+        <button
           onClick={() => navigate('/profile')}
           className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:border-green hover:text-green transition-colors ml-3 bg-white cursor-pointer"
           title="View Profile"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
           </svg>
         </button>
       ) : (
-        <button 
+        <button
           onClick={() => navigate('/auth')}
           className="btn-primary py-2 px-5 text-sm font-semibold ml-3"
         >

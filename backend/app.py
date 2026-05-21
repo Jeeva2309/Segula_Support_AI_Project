@@ -9,12 +9,11 @@ from routes.chatbot import chatbot_bp
 from routes.admin import admin_bp
 from routes.auth import auth_bp
 from routes.ml import ml_bp
-
 def create_app():
     app = Flask(__name__)
+    # Load configuration settings, including SQLALCHEMY_DATABASE_URI
     app.config.from_object(Config)
 
-    # Extensions
     CORS(app, resources={r"/*": {"origins": "*"}})
     JWTManager(app)
     db.init_app(app)

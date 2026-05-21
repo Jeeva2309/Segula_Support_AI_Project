@@ -1,6 +1,10 @@
 import os
 from datetime import timedelta
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    def load_dotenv():
+        pass
 
 load_dotenv()
 
@@ -21,14 +25,15 @@ class Config:
         f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD_ENCODED}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
     )
 
-    # No SSL options needed for standard MySQL deployment
-    SQLALCHEMY_ENGINE_OPTIONS = {}
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+# LLM configuration
+LLM_PROVIDER = os.getenv('LLM_PROVIDER', 'openai')
+LLM_API_KEY = os.getenv('OPENAI_API_KEY')
+LLM_MODEL = os.getenv('LLM_MODEL', 'gpt-4o')
 
-    # JWT configuration
-    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-super-secret-key-change-in-production')
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)
+# Knowledge‑base configuration
+KB_EMBEDDING_MODEL = os.getenv('KB_EMBEDDING_MODEL', 'all-MiniLM-L6-v2')
+KB_INDEX_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'kb_index.faiss')
+KB_DOCS_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'kb_docs.json')
 
-    # General Flask config
-    SECRET_KEY = os.getenv('SECRET_KEY', 'supportai123')
-    DEBUG = os.getenv('FLASK_DEBUG', 'False') == 'True'
+# Conversation context
+CONTEXT_TIMEOUT = int(os.getenv('CONTEXT_TIMEOUT', '300'))  # seconds
