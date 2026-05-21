@@ -1,12 +1,24 @@
 import os
 from config.config import Config
 
-# Dynamically import the appropriate client based on provider
-if Config.LLM_PROVIDER.lower() == "openai":
+# Lazily obtain an OpenAI client based on configuration
+def _get_client():
+    """Create and return an OpenAI client using the configured API key.
+
+    Raises:
+        RuntimeError: If the OPENAI_API_KEY is not set in the environment.
+        ValueError: If an unsupported LLM provider is configured.
+    """
+    if Config.LLM_PROVIDER.lower() != "openai":
+        raise ValueError(f"Unsupported LLM provider: {Config.LLM_PROVIDER}")
+    api_key = Config.LLM_API_KEY
+    if not api_key:
+        raise RuntimeError(
+            "Missing OPENAI_API_KEY. Add it to .env (e.g., OPENAI_API_KEY=your-key)."
+        )
     from openai import OpenAI
-    _client = OpenAI(api_key=Config.LLM_API_KEY)
-else:
-    raise ValueError(f"Unsupported LLM provider: {Config.LLM_PROVIDER}")
+    return OpenAI(api_key=api_key)
+
 
 def ask(prompt: str, system_prompt: str | None = None) -> str:
     """Send a prompt to the configured LLM and return the response text.
@@ -20,7 +32,7 @@ def ask(prompt: str, system_prompt: str | None = None) -> str:
     if system_prompt:
         messages.insert(0, {"role": "system", "content": system_prompt})
     try:
-        resp = _client.chat.completions.create(
+        resp = _get_client().chat.completions.create(
             model=Config.LLM_MODEL,
             messages=messages,
             temperature=0.2,

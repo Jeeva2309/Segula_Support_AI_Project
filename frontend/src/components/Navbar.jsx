@@ -12,14 +12,26 @@ const ALL_LINKS = [
 export default function Navbar({ user }) {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(user);
+
+  useEffect(() => {
+    setCurrentUser(user);
+  }, [user]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setCurrentUser(null);
+    navigate('/auth');
+  };
 
   const navLinks = ALL_LINKS.filter(link => {
-    if (!user && link.to !== '/') return false;
-    if (link.adminOnly && user?.role !== 'admin') return false;
-    if (link.userOnly && user?.role === 'admin') return false;
+    if (!currentUser && link.to !== '/') return false;
+    if (link.adminOnly && currentUser?.role !== 'admin') return false;
+    if (link.userOnly && currentUser?.role === 'admin') return false;
     return true;
   }).map(link => {
-    if (link.to === '/my-tickets' && user?.role === 'admin') {
+    if (link.to === '/my-tickets' && currentUser?.role === 'admin') {
       return { ...link, label: 'Company Tickets' };
     }
     return link;
@@ -67,17 +79,25 @@ export default function Navbar({ user }) {
       </div>
 
       {/* User */}
-      {user ? (
-        <button
-          onClick={() => navigate('/profile')}
-          className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:border-green hover:text-green transition-colors ml-3 bg-white cursor-pointer"
-          title="View Profile"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-        </button>
+      {currentUser ? (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/profile')}
+            className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:border-green hover:text-green transition-colors ml-3 bg-white cursor-pointer"
+            title="View Profile"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </button>
+          <button
+            onClick={handleLogout}
+            className="text-sm text-red-600 hover:underline ml-3"
+          >
+            Logout
+          </button>
+        </div>
       ) : (
         <button
           onClick={() => navigate('/auth')}

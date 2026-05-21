@@ -20,10 +20,7 @@ function ScrollToTop() {
 }
 
 function App() {
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
+  const [user, setUser] = useState(null);
 
   const ProtectedRoute = ({ children, requireAdmin, adminRestricted }) => {
     if (!user) return <Navigate to="/auth" replace />;

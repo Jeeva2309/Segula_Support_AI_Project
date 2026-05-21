@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta
+
 try:
     from dotenv import load_dotenv
 except ImportError:
@@ -25,15 +26,15 @@ class Config:
         f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD_ENCODED}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
     )
 
-# LLM configuration
-LLM_PROVIDER = os.getenv('LLM_PROVIDER', 'openai')
-LLM_API_KEY = os.getenv('OPENAI_API_KEY')
-LLM_MODEL = os.getenv('LLM_MODEL', 'gpt-4o')
+    # LLM configuration
+    LLM_PROVIDER = os.getenv('LLM_PROVIDER', 'openai')
+    LLM_API_KEY = os.getenv('OPENAI_API_KEY')
+    LLM_MODEL = os.getenv('LLM_MODEL', 'gpt-4o')
 
-# Knowledge‑base configuration
-KB_EMBEDDING_MODEL = os.getenv('KB_EMBEDDING_MODEL', 'all-MiniLM-L6-v2')
-KB_INDEX_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'kb_index.faiss')
-KB_DOCS_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'kb_docs.json')
+    # Knowledge‑base configuration
+    KB_EMBEDDING_MODEL = os.getenv('KB_EMBEDDING_MODEL', 'all-MiniLM-L6-v2')
+    KB_INDEX_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'kb_index.faiss')
+    KB_DOCS_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'kb_docs.json')
 
-# Conversation context
-CONTEXT_TIMEOUT = int(os.getenv('CONTEXT_TIMEOUT', '300'))  # seconds
+    # Conversation context timeout in seconds
+    CONTEXT_TIMEOUT = int(os.getenv('CONTEXT_TIMEOUT', '300'))  # seconds
