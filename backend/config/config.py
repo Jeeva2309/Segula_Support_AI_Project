@@ -5,48 +5,30 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    # ─── Aiven MySQL Database ──────────────────────────────
-    MYSQL_USER     = os.getenv('MYSQL_USER', 'avnadmin')
+    # MySQL Database Configuration
+    MYSQL_USER = os.getenv('MYSQL_USER', 'avnadmin')
     MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD', '')
-    MYSQL_HOST     = os.getenv('MYSQL_HOST', 'localhost')
-    MYSQL_PORT     = os.getenv('MYSQL_PORT', '3306')
-    MYSQL_DB       = os.getenv('MYSQL_DB', 'defaultdb')
+    MYSQL_HOST = os.getenv('MYSQL_HOST', 'localhost')
+    MYSQL_PORT = os.getenv('MYSQL_PORT', '3306')
+    MYSQL_DB = os.getenv('MYSQL_DB', 'defaultdb')
 
-    # Dynamic absolute path to ca.pem
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    CA_PATH = os.path.join(BASE_DIR, 'ca.pem')
-
+    # Encode password for URL safety
     import urllib.parse
     MYSQL_PASSWORD_ENCODED = urllib.parse.quote_plus(MYSQL_PASSWORD)
-    CA_PATH_ENCODED = urllib.parse.quote_plus(CA_PATH)
 
-    DATABASE_URL = os.getenv('DATABASE_URL')
-    if DATABASE_URL:
-        # standard compatibility fix for SQLAlchemy with Postgres URLs
-        if DATABASE_URL.startswith("postgres://"):
-            DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-        SQLALCHEMY_DATABASE_URI = DATABASE_URL
-    else:
-        SQLALCHEMY_DATABASE_URI = (
-            f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD_ENCODED}"
-            f"@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
-        )
+    # SQLAlchemy connection URI (MySQL)
+    SQLALCHEMY_DATABASE_URI = (
+        f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD_ENCODED}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
+    )
+
+    # No SSL options needed for standard MySQL deployment
     SQLALCHEMY_ENGINE_OPTIONS = {}
-    if MYSQL_HOST and "aivencloud.com" in MYSQL_HOST:
-        SQLALCHEMY_ENGINE_OPTIONS = {
-            "connect_args": {
-                "ssl": {
-                    "ca": CA_PATH,
-                    "check_hostname": False
-                }
-            }
-        }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # ─── JWT ──────────────────────────────────────────────
+    # JWT configuration
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-super-secret-key-change-in-production')
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)
 
-    # ─── General ──────────────────────────────────────────
+    # General Flask config
     SECRET_KEY = os.getenv('SECRET_KEY', 'supportai123')
     DEBUG = os.getenv('FLASK_DEBUG', 'False') == 'True'
